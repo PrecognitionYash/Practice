@@ -1,0 +1,21 @@
+# ──────────────────────────────────────────────────────────────────────
+# .cargo/config.toml — Native CPU target flags & linker optimizations
+# ──────────────────────────────────────────────────────────────────────
+
+[build]
+# Emit native CPU instructions for maximum SIMD & branch-prediction gains.
+# CI overrides this via --target flags per architecture.
+rustflags = ["-C", "target-cpu=native"]
+
+[target.'cfg(target_os = "macos")']
+rustflags = ["-C", "target-cpu=native", "-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[profile.release]
+# Strip debug symbols for minimal binary size.
+strip = true
+# Single codegen unit for maximum whole-program LTO.
+codegen-units = 1
+# Enable thin LTO for cross-crate inlining.
+lto = "thin"
+# Optimise for speed (level 3).
+opt-level = 3

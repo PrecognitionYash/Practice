@@ -1,0 +1,123 @@
+name: Production Multi-Arch Release Pipeline
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build Binary (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary_name: harness-tui
+            artifact_name: harness-linux-x86_64
+            cross: false
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            binary_name: harness-tui
+            artifact_name: harness-linux-aarch64
+            cross: true
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary_name: harness-tui
+            artifact_name: harness-macos-arm64
+            cross: false
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_name: harness-tui.exe
+            artifact_name: harness-windows-x86_64.exe
+            cross: false
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux Cross-Compilation Dependencies
+        if: matrix.os == 'ubuntu-latest' && matrix.cross == false
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev pkg-config libssl-dev
+
+      - name: Install Cross for Cross-Compilation
+        if: matrix.cross == true
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Compile Release Binary (Native)
+        if: matrix.cross == false
+        run: |
+          cargo build --release --target ${{ matrix.target }} --bin harness-tui
+
+      - name: Compile Release Binary (Cross)
+        if: matrix.cross == true
+        run: |
+          cross build --release --target ${{ matrix.target }} --bin harness-tui
+
+      - name: Stage Artifact
+        shell: bash
+        run: |
+          mkdir staging
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} staging/${{ matrix.artifact_name }}
+          else
+            cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} staging/${{ matrix.artifact_name }}
+            chmod +x staging/${{ matrix.artifact_name }}
+          fi
+
+      - name: Upload Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: staging/${{ matrix.artifact_name }}
+
+  publish-github-release:
+    name: Publish GitHub Release
+    needs: build-release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Download All Staged Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-binaries
+
+      - name: Generate Cryptographic SHA-256 Checksums
+        run: |
+          cd release-binaries
+          find . -type f -exec sha256sum {} + > SHA256SUMS.txt
+          mv SHA256SUMS.txt ../SHA256SUMS.txt
+
+      - name: Publish Multi-Arch Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'latest' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && format('Release {0}', github.ref_name) || 'Latest Automated Build' }}
+          files: |
+            release-binaries/**/*
+            SHA256SUMS.txt
+          draft: false
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

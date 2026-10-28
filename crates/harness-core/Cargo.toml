@@ -1,0 +1,48 @@
+[package]
+name = "harness-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Shared types, error taxonomy, cryptographic vault, and SQLite WAL datastore for the Autonomous Browser Harness."
+
+[dependencies]
+# Serialisation
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+
+# Cryptography
+aes-gcm = { workspace = true }
+hkdf = { workspace = true }
+sha2 = { workspace = true }
+rand = { workspace = true }
+
+# Hashing
+twox-hash = { workspace = true }
+
+# Concurrent data structures
+dashmap = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+
+# For generic-array (needed by AES-GCM nonce construction)
+generic-array = "1"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full", "test-util"] }
+tempfile = "3"
+tracing-subscriber = { workspace = true }

@@ -1,0 +1,36 @@
+[package]
+name = "harness-bridge"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "PyO3 Python extension bindings for LlamaIndex integration with the Autonomous Browser Harness."
+
+[lib]
+name = "harness_core_rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+harness-core = { path = "../harness-core" }
+harness-browser = { path = "../harness-browser" }
+harness-agent = { path = "../harness-agent" }
+
+# Python C-ABI bindings
+pyo3 = { version = "0.22" }
+
+# Serialization & JSON
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Database & Time
+sqlx = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+dotenvy = { workspace = true }
+
+[features]
+default = ["extension-module"]
+extension-module = ["pyo3/extension-module"]

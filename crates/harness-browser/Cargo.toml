@@ -1,0 +1,51 @@
+[package]
+name = "harness-browser"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Direct CDP driver, Bézier curve mouse dispatch, zero-DOM JSON sniffer, and macro replay engine."
+
+[dependencies]
+harness-core = { path = "../harness-core" }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Async runtime & streams
+tokio = { workspace = true }
+tokio-stream = "0.1"
+futures = "0.3"
+
+# Database
+sqlx = { workspace = true }
+
+# Browser automation & CDP
+chromiumoxide = { version = "0.9", default-features = false, features = ["bytes"] }
+
+# Hashing & Randomness
+twox-hash = { workspace = true }
+rand = { workspace = true }
+rand_distr = "0.4"
+
+# Concurrent data structures & Time
+dashmap = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+
+# Networking, HTML Parsing & Security (Phase 3)
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "http2", "charset", "cookies", "gzip"] }
+scraper = "0.22"
+regex = "1.10"
+url = "2"
+sha2 = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { workspace = true, features = ["full", "test-util"] }
+tracing-subscriber = { workspace = true }

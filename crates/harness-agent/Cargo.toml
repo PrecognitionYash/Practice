@@ -1,0 +1,36 @@
+[package]
+name = "harness-agent"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Pre-flight capability triage gatekeeper, zero-URL canonical search resolver, and native Groq Llama-3.3-70B client."
+
+[dependencies]
+harness-core = { path = "../harness-core" }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# HTTP & Web
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "http2", "charset", "gzip"] }
+url = "2"
+scraper = "0.22"
+quick-xml = "0.37"
+
+# Logging & Time
+tracing = { workspace = true }
+chrono = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { workspace = true, features = ["full", "test-util"] }
+tracing-subscriber = { workspace = true }

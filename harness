@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────────────────────
+# harness — High-Performance Autonomous Browser Harness CLI Launcher
+# ─────────────────────────────────────────────────────────────────────────────
+
+set -e
+
+# Resolve repository root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Automatically source .env if present
+if [ -f ".env" ]; then
+    set -a
+    source ".env"
+    set +a
+fi
+
+print_help() {
+    cat << 'EOF'
+High-Performance Autonomous Browser Harness CLI
+
+USAGE:
+    ./harness [COMMAND | "NATURAL LANGUAGE PROMPT"]
+
+COMMANDS:
+    chat                   Start interactive 60 FPS Groq AI chat & task session (Default)
+    build                  Compile workspace release binary with ThinLTO
+    test                   Run complete 36-test workspace verification suite
+    check                  Fast workspace syntax and type checking
+    clippy                 Run Clippy linter with strict warning enforcement
+    fmt                    Format all workspace Rust code
+    py-build               Build PyO3 Python wheel extension (maturin)
+    help, --help, -h       Display this help message
+
+PROMPT EXECUTION:
+    ./harness "Extract top 10 articles on HackerNews"
+    ./harness "Find latest papers on AI agents on arxiv.org"
+
+ENVIRONMENT:
+    GROQ_API_KEY           Groq API Key (read from .env or shell environment)
+    HARNESS_HEADLESS       true | false (defaults to true)
+    HARNESS_STEALTH        ultra | fast (defaults to ultra)
+    HARNESS_VAULT_KEY      Custom 32-byte session encryption seed
+EOF
+}
+
+case "$1" in
+    -h|--help|help)
+        print_help
+        exit 0
+        ;;
+    build)
+        cargo build --release --workspace
+        exit 0
+        ;;
+    test)
+        cargo test --workspace -- --nocapture
+        exit 0
+        ;;
+    check)
+        cargo check --workspace
+        exit 0
+        ;;
+    clippy)
+        cargo clippy --workspace --all-targets -- -D warnings
+        exit 0
+        ;;
+    fmt)
+        cargo fmt --all
+        exit 0
+        ;;
+    py-build)
+        maturin develop --manifest-path crates/harness-bridge/Cargo.toml --release
+        exit 0
+        ;;
+    chat|"")
+        # Launch interactive chat session
+        if [ -f "target/release/harness" ]; then
+            exec target/release/harness
+        elif [ -f "target/debug/harness" ]; then
+            exec target/debug/harness
+        elif [ -f "target/release/harness-tui" ]; then
+            exec target/release/harness-tui
+        else
+            exec cargo run --bin harness
+        fi
+        ;;
+    *)
+        # Launch session with user prompt pre-loaded
+        if [ -f "target/release/harness" ]; then
+            exec target/release/harness "$@"
+        elif [ -f "target/debug/harness" ]; then
+            exec target/debug/harness "$@"
+        elif [ -f "target/release/harness-tui" ]; then
+            exec target/release/harness-tui "$@"
+        else
+            exec cargo run --bin harness -- "$@"
+        fi
+        ;;
+esac

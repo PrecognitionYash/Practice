@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "harness-browser"
+version = "0.1.0"
+description = "Autonomous browser harness Python SDK powered by bare-metal Rust CDP engine, Set-of-Marks perception, and LlamaIndex/LangChain tool bindings."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "Harness Browser Authors" }
+]
+keywords = [
+    "browser-agent",
+    "cdp",
+    "web-automation",
+    "set-of-marks",
+    "llamaindex",
+    "langchain",
+    "groq",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "typing-extensions>=4.0.0",
+]
+
+[project.optional-dependencies]
+crypto = [
+    "cryptography>=41.0.0",
+]
+llamaindex = [
+    "llama-index-core>=0.10.0",
+]
+langchain = [
+    "langchain>=0.1.0",
+]
+all = [
+    "cryptography>=41.0.0",
+    "llama-index-core>=0.10.0",
+    "langchain>=0.1.0",
+]
+
+[project.scripts]
+harness-py = "harness_browser.cli:main"
+harness-ai = "harness_browser.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["harness_browser*"]
